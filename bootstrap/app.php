@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => \App\Http\Middleware\Authenticate::class,
             'nocache' => \App\Http\Middleware\NoCache::class,
             'role' => \App\Http\Middleware\CheckRole::class,
+            'teams' => \App\Http\Middleware\TeamsPermission::class,
 
         ]);
     })

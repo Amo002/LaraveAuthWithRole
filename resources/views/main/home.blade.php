@@ -18,13 +18,17 @@
             <h2>Welcome, {{ auth()->user()->name }}</h2>
             <p class="text-muted">This is the home page for regular users.</p>
 
+            {{-- Go to Profile Button --}}
+            <a href="{{ route('profile') }}" class="btn btn-info mt-2">Go to Profile</a>
+
+            {{-- Logout Button --}}
             <form action="{{ route('logout') }}" method="POST" class="mt-3">
                 @csrf
                 <button type="submit" class="btn btn-danger">Logout</button>
             </form>
         @else
             <h2>Welcome to Amo World!</h2>
-            <p class="text-muted">Please check your email for registeration link.</p>
+            <p class="text-muted">Please check your email for registration link.</p>
             <form action="{{ route('login') }}" method="GET" class="mt-3">
                 @csrf
                 <button type="submit" class="btn btn-primary">Login</button>

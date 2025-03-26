@@ -10,23 +10,24 @@
     <div class="card p-4 shadow" style="width: 350px;">
         <h4 class="text-center mb-3">Login</h4>
 
-        @if(session('status') === 'success')
+        {{-- Success Message --}}
+        @if (session('status') === 'success')
             <div class="alert alert-success">{{ session('message') }}</div>
         @endif
 
-        @if(session('status') === 'error')
+        {{-- Error Message --}}
+        @if (session('status') === 'error')
             <div class="alert alert-danger">{{ session('message') }}</div>
         @endif
 
-        @if($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        {{-- Validation Errors --}}
+        @error('email')
+            <div class="alert alert-danger">{{ $message }}</div>
+        @enderror
+
+        @error('password')
+            <div class="alert alert-danger">{{ $message }}</div>
+        @enderror
 
         <form method="POST" action="{{ route('login') }}">
             @csrf

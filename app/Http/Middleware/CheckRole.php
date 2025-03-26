@@ -2,9 +2,12 @@
 
 namespace App\Http\Middleware;
 
+namespace App\Http\Middleware;
+
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Spatie\Permission\PermissionRegistrar;
 
 class CheckRole
 {
@@ -16,11 +19,13 @@ class CheckRole
             return redirect()->route('login')->with('error', 'You must log in first.');
         }
 
-        if ($user->hasRole('admin')) {
-            return $next($request);
+        // Set current team context only if user is team-scoped
+        if ($user->merchant_id) {
+            app(PermissionRegistrar::class)->setPermissionsTeamId($user->merchant_id);
         }
 
-        if ($user->hasAnyRole($roles)) {
+        // Check role
+        if ($user->hasRole('admin') || $user->hasAnyRole($roles)) {
             return $next($request);
         }
 

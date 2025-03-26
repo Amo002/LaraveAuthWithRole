@@ -3,40 +3,86 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Merchant;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Str;
+use Spatie\Permission\PermissionRegistrar;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        $this->call(RolePermissionSeeder::class);
+        $this->call([RolePermissionSeeder::class]);
 
+        // Create merchants first
+        $global = Merchant::updateOrCreate(['id' => 1], [
+            'name' => 'Global',
+            'address' => 'System-wide',
+        ]);
 
+        $yahala = Merchant::updateOrCreate(['id' => 2], [
+            'name' => 'Yahala',
+            'address' => '123 Yahala Street',
+        ]);
+
+        $zeroGame = Merchant::updateOrCreate(['id' => 3], [
+            'name' => 'ZeroGame',
+            'address' => '456 ZeroGame Road',
+        ]);
+
+        // GLOBAL USERS
+        app(PermissionRegistrar::class)->setPermissionsTeamId($global->id);
 
         $superAdmin = User::updateOrCreate(
-            ['email' => 'admin@ex.com'],
+            ['email' => 'superadmin@ex.com'],
             [
-                'name' => 'Admin',
+                'name' => 'Super Admin',
                 'password' => bcrypt('admin'),
+                'merchant_id' => $global->id,
             ]
         );
-
-        $Admin = User::updateOrCreate(
-            ['email' => 'user@ex.com'],
-            [
-                'name' => 'User',
-                'password' => bcrypt('user'),
-            ]
-        );
-
         $superAdmin->assignRole('admin');
-        $Admin->assignRole('user');
+
+        $this->createUserWithRole('viewer_global@ex.com', 'Global Viewer', 'viewer', 1);
+
+        // YAHALA USERS
+        app(PermissionRegistrar::class)->setPermissionsTeamId($yahala->id);
+        $this->createRandomMerchantUsers(2, 'yahala');
+
+        // ZEROGAME USERS
+        app(PermissionRegistrar::class)->setPermissionsTeamId($zeroGame->id);
+        $this->createRandomMerchantUsers(3, 'zerogame');
+    }
+
+    private function createUserWithRole($email, $name, $role, $merchantId): void
+    {
+        app(PermissionRegistrar::class)->setPermissionsTeamId($merchantId);
+
+        $user = User::updateOrCreate(
+            ['email' => $email],
+            [
+                'name' => $name,
+                'password' => bcrypt('password'),
+                'merchant_id' => $merchantId,
+            ]
+        );
+
+        $user->assignRole($role);
+    }
+
+    private function createRandomMerchantUsers(int $merchantId, string $prefix): void
+    {
+        $roles = ["{$prefix}_admin", "{$prefix}_user", "{$prefix}_editor"];
+
+        foreach ($roles as $role) {
+            for ($i = 1; $i <= 3; $i++) {
+                $this->createUserWithRole(
+                    "{$prefix}_{$role}{$i}@ex.com",
+                    Str::title($prefix) . " " . Str::title(str_replace("{$prefix}_", '', $role)) . " {$i}",
+                    $role,
+                    $merchantId
+                );
+            }
+        }
     }
 }

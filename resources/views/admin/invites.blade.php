@@ -131,7 +131,7 @@
             document.getElementById('confirm-delete-invite-btn').addEventListener('click', () => {
                 if (deleteInviteId) {
                     const form = document.getElementById('delete-invite-form');
-                    form.action = `/invites/${deleteInviteId}`;
+                    form.action = `/admin/invites/${deleteInviteId}`;
                     form.submit();
                 }
             });

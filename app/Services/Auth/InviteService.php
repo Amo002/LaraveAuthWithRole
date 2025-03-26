@@ -71,6 +71,8 @@ class InviteService
     {
         $invite = Invite::find($id);
 
+        
+
         if (!$invite) {
             return ['status' => false, 'message' => 'Invite not found'];
         }
