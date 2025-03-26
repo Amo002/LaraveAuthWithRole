@@ -74,11 +74,56 @@ class UserService
         if ($id === 1) {
             return [
                 'status' => false,
+<<<<<<< HEAD
                 'message' => 'Cannot delete the super admin.'
             ];
         }
 
         $user->delete();
+=======
+                'message' => 'Failed to delete user.'
+            ];
+        }
+    }
+
+    public function updateUserRole($id, $role)
+    {
+        $authUser = auth()->user();
+
+        if ($authUser->id == $id) {
+            return [
+                'status' => false,
+                'message' => 'You cannot update your own role.'
+            ];
+        }
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return [
+                'status' => false,
+                'message' => 'User not found.'
+            ];
+        }
+
+        // Detach existing roles first
+        $user->roles()->detach();
+
+        if ($role === 'admin') {
+            $user->assignRole('admin');
+            // Remove merchant association if changing to admin
+            $user->merchant_id = null;
+        } elseif ($role === 'merchant') {
+            $user->assignRole('merchant');
+            // Remove merchant association if changing to merchant
+            $user->merchant_id = null;
+        } else {
+            $user->assignRole('user');
+            // Keep the merchant_id for normal users (they can still belong to a merchant)
+        }
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
+
+        $user->save();
 
         return [
             'status' => true,

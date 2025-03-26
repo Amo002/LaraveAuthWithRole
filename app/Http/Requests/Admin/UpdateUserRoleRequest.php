@@ -18,6 +18,7 @@ class UpdateUserRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
+<<<<<<< HEAD
             'role' => [
                 'required',
                 'string',
@@ -36,6 +37,9 @@ class UpdateUserRoleRequest extends FormRequest
                     }
                 }
             ],
+=======
+            'role' => 'required|string|in:admin,merchant,user',
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
         ];
     }
 }

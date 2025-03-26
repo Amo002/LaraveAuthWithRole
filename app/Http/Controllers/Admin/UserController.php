@@ -25,11 +25,17 @@ class UserController extends Controller
         Gate::authorize('viewAny', User::class);
 
         $result = $this->userService->getUsers(auth()->user());
+<<<<<<< HEAD
 
         return view('admin.users', [
             'users' => $result['data'],
             'availableRoles' => $result['roles'],
         ]);
+=======
+        $users = $result['data'];
+
+        return view('admin.users', compact('users'));
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
     }
     
 
@@ -40,7 +46,11 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
+<<<<<<< HEAD
         // Use Gate to authorize
+=======
+        // Authorize delete based on policy
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
         Gate::authorize('delete', $user);
 
         $result = $this->userService->deleteUser($id);
@@ -58,7 +68,11 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
+<<<<<<< HEAD
         // Use Gate to authorize
+=======
+        // Authorize update based on policy
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
         Gate::authorize('update', $user);
 
         $result = $this->userService->updateUserRole($id, $request->role);

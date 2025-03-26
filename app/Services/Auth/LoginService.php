@@ -30,6 +30,7 @@ class LoginService
 
     protected function redirectAfterLogin($user)
     {
+<<<<<<< HEAD
         // Global or Merchant Admins → Dashboard
         if ($user->hasRole(['admin', 'yahala_admin', 'zerogame_admin'])) {
             return redirect()->route('dashboard')
@@ -53,6 +54,18 @@ class LoginService
 
 
 
+=======
+        if ($user->hasRole('admin')) {
+            return redirect()->route('dashboard')->with('success', 'Welcome back!');
+        }
+
+        if ($user->hasRole('merchant')) {
+            return redirect()->route('dashboard')->with('success', 'Welcome back!');
+        }
+
+        return redirect()->route('home')->with('success', 'Welcome back!');
+    }
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
 
     public function logout(Request $request)
     {

@@ -16,7 +16,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+<<<<<<< HEAD
         'merchant_id', // Add merchant_id for team-based permissions
+=======
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
@@ -35,6 +38,7 @@ class User extends Authenticatable
         'two_factor_recovery_codes' => 'array',
         'two_factor_confirmed_at' => 'datetime',
     ];
+<<<<<<< HEAD
 
     /**
      * Relationship with Merchant (Team)
@@ -60,4 +64,6 @@ class User extends Authenticatable
             }
         });
     }
+=======
+>>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
 }
