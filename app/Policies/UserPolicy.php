@@ -55,8 +55,35 @@ class UserPolicy
     /**
      * Delete user (requires 'edit-content' and same merchant).
      */
-    public function delete(User $user, User $targetUser)
+    public function delete(User $authUser, User $targetUser)
     {
-        return $user->can('edit-content') && $user->merchant_id === $targetUser->merchant_id;
+        // Same merchant required
+        if ($authUser->merchant_id !== $targetUser->merchant_id) {
+            return false;
+        }
+
+        // Cannot delete yourself
+        if ($authUser->id === $targetUser->id) {
+            return false;
+        }
+
+        // Get roles (Spatie assumes single role in your setup)
+        $authRole = $authUser->getRoleNames()->first();
+        $targetRole = $targetUser->getRoleNames()->first();
+
+        // Only allow if target has strictly lower role
+        $hierarchy = [
+            'admin' => 3,
+            'editor' => 2,
+            'user' => 1,
+        ];
+
+        // Remove prefix like yahala_admin or zerogame_user
+        $normalize = fn($role) => str_contains($role, '_') ? explode('_', $role)[1] : $role;
+
+        $authLevel = $hierarchy[$normalize($authRole) ?? 'user'] ?? 0;
+        $targetLevel = $hierarchy[$normalize($targetRole) ?? 'user'] ?? 0;
+
+        return $authLevel > $targetLevel;
     }
 }

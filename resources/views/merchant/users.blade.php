@@ -29,8 +29,12 @@
                     </td>
                     <td>{{ $user->email }}</td>
                     <td>
+                        @php
+                            $canDelete = auth()->user()->can('delete', $user);
+                        @endphp
+
                         @if (auth()->id() !== $user->id)
-                            @can('edit-content')
+                            @if ($canDelete)
                                 <button type="button" class="btn btn-sm btn-danger delete-user-btn"
                                     data-user-id="{{ $user->id }}" data-bs-toggle="modal"
                                     data-bs-target="#confirmDeleteUserModal">
@@ -38,7 +42,7 @@
                                 </button>
                             @else
                                 <span class="badge bg-secondary">No Access</span>
-                            @endcan
+                            @endif
                         @else
                             <span class="badge bg-secondary">You</span>
                         @endif
