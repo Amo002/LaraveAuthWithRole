@@ -48,4 +48,14 @@ class MerchantController extends Controller
             $result['message']
         );
     }
+
+    public function toggleStatus($id)
+    {
+        $result = $this->merchantService->toggleMerchantStatus($id);
+
+        return redirect()->route('admin.merchants.index')->with(
+            $result['status'] ? 'success' : 'error',
+            $result['message']
+        );
+    }
 }

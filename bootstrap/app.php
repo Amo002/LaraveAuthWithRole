@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'nocache' => \App\Http\Middleware\NoCache::class,
             'role' => \App\Http\Middleware\CheckRole::class,
             'teams' => \App\Http\Middleware\TeamsPermission::class,
+            'merchant.active' => \App\Http\Middleware\CheckMerchantActive::class,
 
         ]);
     })

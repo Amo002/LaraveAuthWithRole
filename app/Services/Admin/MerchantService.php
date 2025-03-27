@@ -11,14 +11,14 @@ class MerchantService
     public function getAllMerchants()
     {
         $merchants = Merchant::where('id', '!=', 1)->get();
-    
+
         return [
             'status' => true,
             'data' => $merchants,
             'message' => 'Merchants retrieved successfully.',
         ];
     }
-    
+
 
     public function createMerchant(array $data)
     {
@@ -77,6 +77,28 @@ class MerchantService
         return [
             'status' => true,
             'message' => 'Merchant and all associated users and roles deleted successfully.',
+        ];
+    }
+
+    public function toggleMerchantStatus($id)
+    {
+        $merchant = Merchant::find($id);
+
+        if (!$merchant || $merchant->id === 1) {
+            return [
+                'status' => false,
+                'message' => 'Invalid merchant.'
+            ];
+        }
+
+        $merchant->is_active = !$merchant->is_active;
+        $merchant->save();
+
+        return [
+            'status' => true,
+            'message' => $merchant->is_active
+                ? 'Merchant enabled successfully.'
+                : 'Merchant disabled successfully.'
         ];
     }
 }

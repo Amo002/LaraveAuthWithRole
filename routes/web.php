@@ -83,6 +83,8 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
         Route::get('/merchants', [MerchantController::class, 'index'])->name('admin.merchants.index');
         Route::post('/merchants', [MerchantController::class, 'store'])->name('admin.merchants.store');
         Route::delete('/merchants/{id}', [MerchantController::class, 'destroy'])->name('admin.merchants.destroy');
+        Route::patch('/admin/merchants/{id}/toggle', [MerchantController::class, 'toggleStatus'])->name('admin.merchants.toggle');
+
 
         // Admin Invites
         Route::get('/invites', [InviteController::class, 'index'])->name('invites.index');
@@ -94,11 +96,13 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
     // ===========================
     //  Merchant Routes (Scoped to Merchant ID)
     // ===========================
-    Route::prefix('merchant')->group(function () {
+    
+    Route::middleware('merchant.active')->prefix('merchant')->group(function () {
         Route::get('/users', [MerchantUserController::class, 'index'])->name('merchant.users.index');
         Route::post('/users', [MerchantUserController::class, 'store'])->name('merchant.users.store');
         Route::delete('/users/{id}', [MerchantUserController::class, 'destroy'])->name('merchant.users.destroy');
     });
+  
 
 
 

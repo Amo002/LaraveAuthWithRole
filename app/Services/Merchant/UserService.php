@@ -2,6 +2,7 @@
 
 namespace App\Services\Merchant;
 
+use App\Models\Merchant;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -10,8 +11,7 @@ class UserService
     public function getUsersForMerchant($authUser)
     {
         return User::where('merchant_id', $authUser->merchant_id)
-            ->where('id', '!=', $authUser->id)
-            ->select('id', 'name', 'email')
+            ->orderBy('id')
             ->get();
     }
 

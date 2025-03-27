@@ -6,14 +6,6 @@
     <div class="container mt-4" style="max-width: 600px;">
         <h2 class="mb-4 text-center">Two-Factor Authentication</h2>
 
-        {{-- Flash Messages --}}
-        @foreach (['success', 'error'] as $type)
-            @if (session($type))
-                <div class="alert alert-{{ $type === 'success' ? 'success' : 'danger' }}">
-                    {{ session($type) }}
-                </div>
-            @endif
-        @endforeach
 
         {{-- Show QR Code for setup --}}
         @if (session('2fa:qrCode') && !auth()->user()->two_factor_secret)

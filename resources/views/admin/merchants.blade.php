@@ -15,6 +15,7 @@
                 <th>ID</th>
                 <th>Name</th>
                 <th>Address</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -25,6 +26,24 @@
                     <td>{{ $merchant->name }}</td>
                     <td>{{ $merchant->address }}</td>
                     <td>
+                        @if ($merchant->is_active)
+                            <span class="badge bg-success">Active</span>
+                        @else
+                            <span class="badge bg-danger">Disabled</span>
+                        @endif
+                    </td>
+                    <td class="d-flex gap-2">
+                        {{-- Toggle Status --}}
+                        <form action="{{ route('admin.merchants.toggle', $merchant->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit"
+                                class="btn btn-sm {{ $merchant->is_active ? 'btn-warning' : 'btn-success' }}">
+                                {{ $merchant->is_active ? 'Disable' : 'Enable' }}
+                            </button>
+                        </form>
+
+                        {{-- Delete Button --}}
                         <button type="button" class="btn btn-sm btn-danger delete-merchant-btn"
                             data-merchant-id="{{ $merchant->id }}"
                             data-merchant-name="{{ $merchant->name }}"

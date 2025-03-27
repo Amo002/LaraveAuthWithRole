@@ -2,6 +2,12 @@
     <h4>Dashboard</h4>
     <ul class="nav flex-column">
 
+
+        @php
+            $user = auth()->user();
+            $merchantIsActive = $user->merchant && $user->merchant->is_active;
+        @endphp
+
         {{-- Dashboard --}}
         @can('dashboard')
             <li class="nav-item">
@@ -38,20 +44,23 @@
         @endcan
 
         {{-- Yahala Merchant Users --}}
-        @can('yahala-users')
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('merchant.users.index') ? 'active' : '' }}"
-                    href="{{ route('merchant.users.index') }}">Users</a>
-            </li>
-        @endcan
+        @if ($merchantIsActive)
+            @can('yahala-users')
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('merchant.users.index') ? 'active' : '' }}"
+                        href="{{ route('merchant.users.index') }}">Users</a>
+                </li>
+            @endcan
 
-        {{-- ZeroGame Merchant Users --}}
-        @can('zerogame-users')
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('merchant.users.index') ? 'active' : '' }}"
-                    href="{{ route('merchant.users.index') }}">Users</a>
-            </li>
-        @endcan
+            {{-- ZeroGame Merchant Users --}}
+            @can('zerogame-users')
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('merchant.users.index') ? 'active' : '' }}"
+                        href="{{ route('merchant.users.index') }}">Users</a>
+                </li>
+            @endcan
+        @endif
+
 
         {{-- Profile --}}
         <li class="nav-item">

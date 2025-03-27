@@ -50,4 +50,6 @@ class UserController extends Controller
             $result['message']
         );
     }
+
+    
 }
