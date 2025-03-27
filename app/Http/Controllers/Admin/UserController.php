@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\UpdateUserRoleRequest;
-use App\Models\User;
 use App\Services\Admin\UserService;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -18,41 +16,23 @@ class UserController extends Controller
     }
 
     /**
-     * Display a listing of the users.
+     * Show all users (across merchants)
      */
     public function index()
     {
-        Gate::authorize('viewAny', User::class);
-
         $result = $this->userService->getUsers(auth()->user());
-<<<<<<< HEAD
 
         return view('admin.users', [
             'users' => $result['data'],
             'availableRoles' => $result['roles'],
         ]);
-=======
-        $users = $result['data'];
-
-        return view('admin.users', compact('users'));
->>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
     }
-    
 
     /**
-     * Delete a user.
+     * Delete a user
      */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-
-<<<<<<< HEAD
-        // Use Gate to authorize
-=======
-        // Authorize delete based on policy
->>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
-        Gate::authorize('delete', $user);
-
         $result = $this->userService->deleteUser($id);
 
         return redirect()->route('admin.users.index')->with(
@@ -62,18 +42,13 @@ class UserController extends Controller
     }
 
     /**
-     * Update the user role.
+     * Update a user's role
      */
-    public function updateRole(UpdateUserRoleRequest $request, $id)
+    public function updateRole(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-
-<<<<<<< HEAD
-        // Use Gate to authorize
-=======
-        // Authorize update based on policy
->>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
-        Gate::authorize('update', $user);
+        $request->validate([
+            'role' => 'required|string',
+        ]);
 
         $result = $this->userService->updateUserRole($id, $request->role);
 

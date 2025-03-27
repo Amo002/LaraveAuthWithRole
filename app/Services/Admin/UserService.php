@@ -9,21 +9,20 @@ use Spatie\Permission\PermissionRegistrar;
 class UserService
 {
     /**
-     * Get all users
+     * Get all users across all merchants
      */
-
     public function getUsers($authUser)
     {
         $allUsers = collect();
         $availableRoles = collect();
 
-        // Dynamically get all merchant IDs that have users
+        // Get all unique merchant_ids from users
         $merchantIds = User::select('merchant_id')->distinct()->pluck('merchant_id');
 
         foreach ($merchantIds as $merchantId) {
             app(PermissionRegistrar::class)->setPermissionsTeamId($merchantId);
 
-            // Get users per merchant
+            // Users under current merchant
             $users = User::where('merchant_id', $merchantId)
                 ->with('roles')
                 ->select('id', 'name', 'email', 'merchant_id')
@@ -33,12 +32,12 @@ class UserService
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
-                        'merchant_id' => $user->merchant_id, 
+                        'merchant_id' => $user->merchant_id,
                         'roles' => $user->roles->pluck('name')->toArray(),
                     ];
                 });
 
-            // Get all roles for this merchant
+            // Roles available for this merchant
             $rolesForTeam = Role::where('merchant_id', $merchantId)->pluck('name');
             $availableRoles[$merchantId] = $rolesForTeam;
 
@@ -53,8 +52,43 @@ class UserService
         ];
     }
 
+    /**
+     * Update user role for a given user
+     */
+    public function updateUserRole($id, $role)
+    {
+        $user = User::find($id);
 
+        if (!$user) {
+            return [
+                'status' => false,
+                'message' => 'User not found.'
+            ];
+        }
 
+        if ((int) $user->id === 1 || auth()->id() === $user->id) {
+            return [
+                'status' => false,
+                'message' => 'You cannot change this user\'s role.'
+            ];
+        }
+
+        app(PermissionRegistrar::class)->setPermissionsTeamId($user->merchant_id);
+
+        if (!Role::where('name', $role)->where('merchant_id', $user->merchant_id)->exists()) {
+            return [
+                'status' => false,
+                'message' => 'Invalid role for this merchant.'
+            ];
+        }
+
+        $user->syncRoles([$role]);
+
+        return [
+            'status' => true,
+            'message' => 'User role updated successfully.'
+        ];
+    }
 
     /**
      * Delete a user
@@ -70,112 +104,18 @@ class UserService
             ];
         }
 
-        // Prevent deleting the super admin
-        if ($id === 1) {
+        if ((int) $user->id === 1) {
             return [
                 'status' => false,
-<<<<<<< HEAD
-                'message' => 'Cannot delete the super admin.'
+                'message' => 'Cannot delete the Super Admin.'
             ];
         }
 
         $user->delete();
-=======
-                'message' => 'Failed to delete user.'
-            ];
-        }
-    }
-
-    public function updateUserRole($id, $role)
-    {
-        $authUser = auth()->user();
-
-        if ($authUser->id == $id) {
-            return [
-                'status' => false,
-                'message' => 'You cannot update your own role.'
-            ];
-        }
-
-        $user = User::find($id);
-
-        if (!$user) {
-            return [
-                'status' => false,
-                'message' => 'User not found.'
-            ];
-        }
-
-        // Detach existing roles first
-        $user->roles()->detach();
-
-        if ($role === 'admin') {
-            $user->assignRole('admin');
-            // Remove merchant association if changing to admin
-            $user->merchant_id = null;
-        } elseif ($role === 'merchant') {
-            $user->assignRole('merchant');
-            // Remove merchant association if changing to merchant
-            $user->merchant_id = null;
-        } else {
-            $user->assignRole('user');
-            // Keep the merchant_id for normal users (they can still belong to a merchant)
-        }
->>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
-
-        $user->save();
 
         return [
             'status' => true,
             'message' => 'User deleted successfully.'
         ];
     }
-
-    /**
-     * Update user role
-     */
-
-     public function updateUserRole($id, $role)
-     {
-         $user = User::find($id);
-     
-         if (!$user) {
-             return [
-                 'status' => false,
-                 'message' => 'User not found.'
-             ];
-         }
-     
-         if (auth()->id() === $user->id) {
-             return [
-                 'status' => false,
-                 'message' => 'You cannot change your own role.'
-             ];
-         }
-     
-         if ((int) $user->id === 1) {
-             return [
-                 'status' => false,
-                 'message' => 'Cannot modify the Super Admin role.'
-             ];
-         }
-     
-         app(PermissionRegistrar::class)->setPermissionsTeamId($user->merchant_id);
-     
-         // ✅ Fix here
-         if (!Role::withoutGlobalScopes()->where('name', $role)->where('merchant_id', $user->merchant_id)->exists()) {
-             return [
-                 'status' => false,
-                 'message' => 'Invalid role for this merchant.'
-             ];
-         }
-     
-         $user->syncRoles([$role]);
-     
-         return [
-             'status' => true,
-             'message' => 'User role updated successfully.'
-         ];
-     }
-     
 }

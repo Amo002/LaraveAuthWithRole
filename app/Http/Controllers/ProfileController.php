@@ -23,10 +23,6 @@ class ProfileController extends Controller
         $secret = session('2fa:secret');
         $recoveryCodes = session('2fa:recoveryCodes', []);
 
-<<<<<<< HEAD
-        return view('shared.profile', compact('status', 'qrCode', 'secret', 'recoveryCodes'));
-=======
         return view('profile', compact('status', 'qrCode', 'secret', 'recoveryCodes'));
->>>>>>> 5facc614503652ba13d316d933c77bc46416dbd2
     }
 }
