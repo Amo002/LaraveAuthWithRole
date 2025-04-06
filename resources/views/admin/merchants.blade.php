@@ -33,6 +33,11 @@
                         @endif
                     </td>
                     <td class="d-flex gap-2">
+
+                        <!-- Manage button -->
+                        <a href="{{ route('admin.merchants.manage', $merchant->id) }}" class="btn btn-sm btn-info">Manage</a>
+
+
                         {{-- Toggle Status --}}
                         <form action="{{ route('admin.merchants.toggle', $merchant->id) }}" method="POST">
                             @csrf
@@ -45,8 +50,7 @@
 
                         {{-- Delete Button --}}
                         <button type="button" class="btn btn-sm btn-danger delete-merchant-btn"
-                            data-merchant-id="{{ $merchant->id }}"
-                            data-merchant-name="{{ $merchant->name }}"
+                            data-merchant-id="{{ $merchant->id }}" data-merchant-name="{{ $merchant->name }}"
                             data-bs-toggle="modal" data-bs-target="#confirmDeleteMerchantModal">
                             Delete
                         </button>
@@ -129,7 +133,8 @@
                     const name = button.getAttribute('data-merchant-name');
 
                     document.getElementById('merchant-name-placeholder').textContent = name;
-                    document.getElementById('delete-merchant-form').action = `/admin/merchants/${id}`;
+                    document.getElementById('delete-merchant-form').action =
+                        `/admin/merchants/${id}`;
                 });
             });
 

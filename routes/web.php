@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\MerchantController;
+use App\Http\Controllers\Admin\MerchantManagementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\InviteController;
@@ -73,18 +74,23 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
     //  Admin Routes (Super Admin Only)
     // ===========================
     Route::middleware('role:admin')->prefix('admin')->group(function () {
-
         // Admin Users
         Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
         Route::patch('/users/{id}/update-role', [UserController::class, 'updateRole'])->name('admin.users.updateRole');
 
-        //Admin Merchant
+        // Admin Merchant
         Route::get('/merchants', [MerchantController::class, 'index'])->name('admin.merchants.index');
         Route::post('/merchants', [MerchantController::class, 'store'])->name('admin.merchants.store');
         Route::delete('/merchants/{id}', [MerchantController::class, 'destroy'])->name('admin.merchants.destroy');
         Route::patch('/admin/merchants/{id}/toggle', [MerchantController::class, 'toggleStatus'])->name('admin.merchants.toggle');
 
+        // MERCHANT MANAGEMENT 
+        Route::get('merchants/{id}/manage', [MerchantManagementController::class, 'show'])->name('admin.merchants.manage');
+        Route::post('merchants/{merchant}/permissions', [MerchantManagementController::class, 'storePermission'])->name('admin.merchants.permissions.store');
+        Route::delete('merchants/{merchant}/permissions/{permission}', [MerchantManagementController::class, 'destroyPermission'])->name('admin.merchants.permissions.destroy');
+        Route::post('merchants/{merchant}/roles/{role}/assign-permission', [MerchantManagementController::class, 'assignPermission'])->name('admin.merchants.roles.assignPermission');
+        Route::delete('merchants/{merchant}/roles/{role}/permissions/{permission}',[MerchantManagementController::class, 'revokePermission'])->name('admin.merchants.roles.revokePermission');
 
         // Admin Invites
         Route::get('/invites', [InviteController::class, 'index'])->name('invites.index');
@@ -96,13 +102,13 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
     // ===========================
     //  Merchant Routes (Scoped to Merchant ID)
     // ===========================
-    
+
     Route::middleware('merchant.active')->prefix('merchant')->group(function () {
         Route::get('/users', [MerchantUserController::class, 'index'])->name('merchant.users.index');
         Route::post('/users', [MerchantUserController::class, 'store'])->name('merchant.users.store');
         Route::delete('/users/{id}', [MerchantUserController::class, 'destroy'])->name('merchant.users.destroy');
     });
-  
+
 
 
 

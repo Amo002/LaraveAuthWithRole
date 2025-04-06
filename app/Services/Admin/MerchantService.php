@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Models\Merchant;
 use App\Models\User;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class MerchantService
@@ -29,16 +30,43 @@ class MerchantService
             ];
         }
 
-        Merchant::create([
-            'name' => $data['name'],
+        // 1) Create the merchant
+        $merchant = Merchant::create([
+            'name'    => $data['name'],
             'address' => $data['address'],
         ]);
 
+        // 2) Make sure we tell Spatie which team (merchant) we are working with
+        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($merchant->id);
+
+        // 3) Create the user
+        $email = $merchant->name . '_superadmin@example.com';
+        $user = User::create([
+            'name'        => $merchant->name,
+            'email'       => $email,
+            'merchant_id' => $merchant->id,
+            'password'    => bcrypt($merchant->name),
+        ]);
+
+        // 4) Create the superadmin role
+        $roleName = $merchant->name . '_superadmin';
+        $role = \Spatie\Permission\Models\Role::firstOrCreate(
+            [
+                'name'        => $roleName,
+                'merchant_id' => $merchant->id,
+            ]
+        );
+
+        // 5) Assign that role to the user
+        $user->assignRole($role);
+
         return [
             'status' => true,
-            'message' => 'Merchant created successfully.',
+            'message' => "Merchant [{$merchant->name}] created with a Super Admin: {$email}",
         ];
     }
+
+
 
     public function deleteMerchant($id)
     {

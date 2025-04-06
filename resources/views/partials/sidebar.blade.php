@@ -9,6 +9,7 @@
         @endphp
 
         {{-- Dashboard --}}
+        {{-- here it check for a gate in the authServiseProvider --}}
         @can('dashboard')
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
@@ -17,6 +18,7 @@
         @endcan
 
         {{-- Admin Users (Only for Admin) --}}
+        {{-- here it check for a gate in the authServiseProvider --}}
         @can('admin')
             {{-- Users --}}
             <li class="nav-item">
@@ -44,6 +46,7 @@
         @endcan
 
         {{-- Yahala Merchant Users --}}
+        {{-- here it check for a gate in the authServiseProvider --}}
         @if ($merchantIsActive)
             @can('yahala-users')
                 <li class="nav-item">
@@ -53,6 +56,7 @@
             @endcan
 
             {{-- ZeroGame Merchant Users --}}
+            {{-- here it check for a gate in the authServiseProvider --}}
             @can('zerogame-users')
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('merchant.users.index') ? 'active' : '' }}"

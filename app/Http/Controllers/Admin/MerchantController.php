@@ -16,6 +16,7 @@ class MerchantController extends Controller
         $this->merchantService = $merchantService;
     }
 
+
     public function index()
     {
         Gate::authorize('admin');

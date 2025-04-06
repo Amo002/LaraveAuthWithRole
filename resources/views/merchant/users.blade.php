@@ -5,7 +5,8 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Merchant Users</h2>
-        @can('manage-users')
+        {{-- here it check if the user has permission  no gates in the auth or anything  --}}
+        @can('manage-users') 
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">Add User</button>
         @endcan
     </div>

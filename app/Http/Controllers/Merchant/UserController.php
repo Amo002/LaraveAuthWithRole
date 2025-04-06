@@ -19,6 +19,8 @@ class UserController extends Controller
 
     public function index()
     {
+        // here check if the user has the permission to view any users 
+        // in the policy 
         Gate::authorize('viewAny', User::class);
 
         $users = $this->userService->getUsersForMerchant(auth()->user());
@@ -28,6 +30,9 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        // here check if the user has the permission to create a user
+        // in the policy 
+
         Gate::authorize('create', User::class);
 
         $result = $this->userService->createUserForMerchant($request, auth()->user());
@@ -40,6 +45,8 @@ class UserController extends Controller
 
     public function destroy($id)
     {
+        // here check if the user has the permission to delete a user
+        // in the policy
         $targetUser = User::findOrFail($id);
         Gate::authorize('delete', $targetUser);
 
@@ -50,6 +57,4 @@ class UserController extends Controller
             $result['message']
         );
     }
-
-    
 }
