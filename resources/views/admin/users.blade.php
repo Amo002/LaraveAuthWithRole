@@ -10,7 +10,8 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Email</th>
+                <th>Name</th>
+                <th>Email</th> 
                 <th>Roles</th>
                 <th>Actions</th>
             </tr>
@@ -20,18 +21,16 @@
                 <tr>
                     <td>{{ $user['id'] }}</td>
                     <td>{{ $user['name'] }}</td>
-                    <td>{{ $user['email'] }}</td>
+                    <td>{{ $user['email'] }}</td> 
                     <td>{{ implode(', ', $user['roles']) }}</td>
                     <td>
                         @if (auth()->id() !== $user['id'] && $user['id'] !== 1)
-                            {{-- Delete Button --}}
                             <button type="button" class="btn btn-sm btn-danger delete-user-btn"
                                 data-user-id="{{ $user['id'] }}" data-bs-toggle="modal"
                                 data-bs-target="#confirmDeleteUserModal">
                                 Delete
                             </button>
 
-                            {{-- Update Role Button --}}
                             <button type="button" class="btn btn-sm btn-warning update-role-btn"
                                 data-user-id="{{ $user['id'] }}" data-current-role="{{ $user['roles'][0] ?? '' }}"
                                 data-merchant-id="{{ $user['merchant_id'] }}" data-bs-toggle="modal"
@@ -46,6 +45,7 @@
             @endforeach
         </tbody>
     </table>
+
 
 
     {{-- Delete Confirmation Modal --}}

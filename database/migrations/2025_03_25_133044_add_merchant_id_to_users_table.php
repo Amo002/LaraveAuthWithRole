@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('permissions', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             // Add merchant_id as a non-nullable foreign key
             // with a default value of 1 (the "global" merchant).
             $table->unsignedBigInteger('merchant_id')->default(1);
@@ -24,7 +24,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('permissions', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             // Drop the foreign key first, then the column
             $table->dropForeign(['merchant_id']);
             $table->dropColumn('merchant_id');

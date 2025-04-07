@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Main\HomeController;
+use App\Http\Controllers\Merchant\RoleController;
 use App\Http\Controllers\Merchant\UserController as MerchantUserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -64,7 +65,7 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
     //  Dashboard Routes
     // ===========================
     // Admin Dashboard - Scoped to Super Admin Only
-    Route::middleware('role:admin,zerogame_admin,yahala_admin')->group(function () {
+    Route::middleware('role:admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     });
 
@@ -90,7 +91,8 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
         Route::post('merchants/{merchant}/permissions', [MerchantManagementController::class, 'storePermission'])->name('admin.merchants.permissions.store');
         Route::delete('merchants/{merchant}/permissions/{permission}', [MerchantManagementController::class, 'destroyPermission'])->name('admin.merchants.permissions.destroy');
         Route::post('merchants/{merchant}/roles/{role}/assign-permission', [MerchantManagementController::class, 'assignPermission'])->name('admin.merchants.roles.assignPermission');
-        Route::delete('merchants/{merchant}/roles/{role}/permissions/{permission}',[MerchantManagementController::class, 'revokePermission'])->name('admin.merchants.roles.revokePermission');
+        Route::delete('merchants/{merchant}/roles/{role}/permissions/{permission}', [MerchantManagementController::class, 'revokePermission'])->name('admin.merchants.roles.revokePermission');
+        Route::post('/admin/merchants/{merchant}/permissions/unlock', [MerchantManagementController::class, 'unlockDevPermissions'])->name('admin.merchants.permissions.unlock');
 
         // Admin Invites
         Route::get('/invites', [InviteController::class, 'index'])->name('invites.index');
@@ -103,11 +105,21 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
     //  Merchant Routes (Scoped to Merchant ID)
     // ===========================
 
-    Route::middleware('merchant.active')->prefix('merchant')->group(function () {
-        Route::get('/users', [MerchantUserController::class, 'index'])->name('merchant.users.index');
-        Route::post('/users', [MerchantUserController::class, 'store'])->name('merchant.users.store');
-        Route::delete('/users/{id}', [MerchantUserController::class, 'destroy'])->name('merchant.users.destroy');
+    Route::middleware(['auth', 'merchant.active'])->prefix('merchant')->group(function () {
+        // Merchant Users
+        Route::get('/users', [MerchantUserController::class, 'index'])->name('merchant.users.index')->middleware('can:view-merchant-users');
+        Route::post('/users', [MerchantUserController::class, 'store'])->name('merchant.users.store')->middleware('can:create-merchant-users');
+        Route::delete('/users/{id}', [MerchantUserController::class, 'destroy'])->name('merchant.users.destroy')->middleware('can:delete-merchant-users');
+
+        // Merchant Roles
+        Route::get('/roles', [RoleController::class, 'index'])->name('merchant.roles.index')->middleware('can:view-roles');
+        Route::post('/roles', [RoleController::class, 'store'])->name('merchant.roles.store')->middleware('can:create-roles');
+        Route::post('/roles/{role}/assign-permissions', [RoleController::class, 'assignPermission'])->name('merchant.roles.assignPermission')->middleware('can:edit-roles');
+        Route::delete('/roles/{role}/revoke-permission/{permission}', [RoleController::class, 'revokePermission'])->name('merchant.roles.revokePermission')->middleware('can:edit-roles');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('merchant.roles.destroy')->middleware('can:delete-roles');
     });
+
+
 
 
 

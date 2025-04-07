@@ -7,7 +7,7 @@ use App\Models\User;
 class UserPolicy
 {
     /**
-     * Super Admin (merchant_id = 1) bypasses all policies.
+     * Global super admin (merchant_id = 1 + admin role) bypasses all.
      */
     public function before(User $user)
     {
@@ -17,73 +17,66 @@ class UserPolicy
     }
 
     /**
-     * View a single user (must be in the same merchant).
+     * View a specific user.
      */
     public function view(User $user, User $targetUser)
     {
-        return $user->merchant_id === $targetUser->merchant_id;
+        return $user->merchant_id === $targetUser->merchant_id
+            && ($user->can('view-users') || $user->can('view-merchant-users'));
     }
 
     /**
-     * View all users (only for merchants, not global admin).
+     * View any users (used in index view).
      */
     public function viewAny(User $user)
     {
-        return $user->merchant_id !== 1;
+        return $user->can('view-users') || $user->can('view-merchant-users');
     }
 
     /**
-     * Create new user (requires 'manage-users' permission).
+     * Create a new user.
      */
     public function create(User $user)
     {
-        return $user->can('manage-users');
+        return $user->can('create-users') || $user->can('create-merchant-users');
     }
 
     /**
-     * Update user info (must be same merchant).
+     * Update a user.
      */
     public function update(User $user, User $targetUser)
     {
-        if ($targetUser->id === 1) {
-            return false;
-        }
+        if ($targetUser->id === 1) return false;
 
-        return $user->merchant_id === $targetUser->merchant_id;
+        return $user->merchant_id === $targetUser->merchant_id &&
+               ($user->can('edit-users') || $user->can('edit-merchant-users'));
     }
 
     /**
-     * Delete user (requires 'edit-content' and same merchant).
+     * Delete a user.
      */
     public function delete(User $authUser, User $targetUser)
     {
-        // Same merchant required
+        if ($authUser->id === $targetUser->id || $targetUser->id === 1) {
+            return false;
+        }
+
         if ($authUser->merchant_id !== $targetUser->merchant_id) {
             return false;
         }
 
-        // Cannot delete yourself
-        if ($authUser->id === $targetUser->id) {
+        if (!($authUser->can('delete-users') || $authUser->can('delete-merchant-users'))) {
             return false;
         }
 
-        // Get roles (Spatie assumes single role in your setup)
         $authRole = $authUser->getRoleNames()->first();
         $targetRole = $targetUser->getRoleNames()->first();
 
-        // Only allow if target has strictly lower role
-        $hierarchy = [
-            'admin' => 3,
-            'editor' => 2,
-            'user' => 1,
-        ];
+        // Disallow deleting same or higher role
+        if ($authRole === $targetRole) {
+            return false;
+        }
 
-        // Remove prefix like yahala_admin or zerogame_user
-        $normalize = fn($role) => str_contains($role, '_') ? explode('_', $role)[1] : $role;
-
-        $authLevel = $hierarchy[$normalize($authRole) ?? 'user'] ?? 0;
-        $targetLevel = $hierarchy[$normalize($targetRole) ?? 'user'] ?? 0;
-
-        return $authLevel > $targetLevel;
+        return true;
     }
 }

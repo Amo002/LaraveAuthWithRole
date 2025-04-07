@@ -49,10 +49,9 @@ class MerchantService
         ]);
 
         // 4) Create the superadmin role
-        $roleName = $merchant->name . '_superadmin';
-        $role = \Spatie\Permission\Models\Role::firstOrCreate(
+        $role = Role::firstOrCreate(
             [
-                'name'        => $roleName,
+                'name' => 'merchant_admin',
                 'merchant_id' => $merchant->id,
             ]
         );

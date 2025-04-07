@@ -12,4 +12,5 @@ class Merchant extends Model
     {
         return $this->hasMany(User::class, 'merchant_id');
     }
+    
 }

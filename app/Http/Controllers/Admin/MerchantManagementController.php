@@ -9,6 +9,7 @@ use Spatie\Permission\Models\Role;
 use App\Services\Admin\MerchantManagementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\PermissionRegistrar;
 
 class MerchantManagementController extends Controller
@@ -106,5 +107,22 @@ class MerchantManagementController extends Controller
         return redirect()
             ->route('admin.merchants.manage', $merchant->id)
             ->with($result['status'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function unlockDevPermissions(Request $request, Merchant $merchant)
+    {
+        Gate::authorize('admin');
+
+        $request->validate([
+            'password' => ['required'],
+        ]);
+
+        if (!Hash::check($request->password, auth()->user()->password)) {
+            return back()->with('error', 'Invalid developer password.');
+        }
+
+        session(['show_merchant_permissions' => true]);
+
+        return redirect()->route('admin.merchants.manage', $merchant->id)->with('success', 'Developer permissions unlocked.');
     }
 }

@@ -30,19 +30,14 @@ class LoginService
 
     protected function redirectAfterLogin($user)
     {
-        // Global or Merchant Admins → Dashboard
-        if ($user->hasRole(['admin', 'yahala_admin', 'zerogame_admin'])) {
+        // Global Admins → Dashboard
+        if ($user->hasRole(['merchant_admin', 'admin'])) {
             return redirect()->route('dashboard')
                 ->with('status', 'success')
                 ->with('message', 'Welcome back, Admin!');
         }
 
-        // Merchant Editors or Users → Merchant Users Page
-        if ($user->hasAnyRole(['yahala_editor', 'yahala_user', 'zerogame_editor', 'zerogame_user'])) {
-            return redirect()->route('merchant.users.index')
-                ->with('status', 'success')
-                ->with('message', 'Welcome back to your merchant panel!');
-        }
+
 
         // Default fallback → Home
         return redirect()->route('home')

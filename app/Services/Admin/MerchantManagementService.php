@@ -26,8 +26,8 @@ class MerchantManagementService
             ->with(['permissions', 'users'])
             ->get();
 
-        // Merchant-specific permissions
-        $permissions = Permission::where('merchant_id', $merchant->id)->get();
+        // All available permissions globally
+        $permissions = Permission::all();
 
         // Identify super admin user if it exists
         $superAdminRoleName = $merchant->name . '_superadmin';
@@ -51,11 +51,10 @@ class MerchantManagementService
     }
 
     /**
-     * Create/store a new permission for the merchant.
+     * Create/store a new permission globally.
      */
     public function storePermission(Merchant $merchant, array $data)
     {
-        // Validate required field
         if (empty($data['permission_name'])) {
             return [
                 'status'  => false,
@@ -63,7 +62,7 @@ class MerchantManagementService
             ];
         }
 
-        // Check if permission name already exists
+        // Check if this permission already exists globally
         $existing = Permission::where('name', $data['permission_name'])->first();
         if ($existing) {
             return [
@@ -72,103 +71,83 @@ class MerchantManagementService
             ];
         }
 
-        // Create a new Permission for this merchant
+        // Create globally for the 'web' guard
         Permission::create([
-            'name'        => $data['permission_name'],
-            'merchant_id' => $merchant->id,
+            'name' => $data['permission_name'],
+            'guard_name' => 'web',
         ]);
 
         return [
-            'status'  => true,
+            'status' => true,
             'message' => 'New permission added successfully.',
         ];
     }
 
     /**
-     * Delete a permission from the merchant.
+     * Delete a global permission.
      */
     public function destroyPermission(Merchant $merchant, Permission $permission)
     {
-        // Confirm the permission truly belongs to this merchant
-        if ($permission->merchant_id !== $merchant->id) {
-            return [
-                'status'  => false,
-                'message' => 'Permission not found for this merchant.',
-            ];
-        }
-
         $permission->delete();
 
         return [
-            'status'  => true,
+            'status' => true,
             'message' => 'Permission deleted successfully.',
         ];
     }
 
     /**
-     * Assign a permission to a role of this merchant.
+     * Assign selected permissions to a role.
      */
     public function assignMultiplePermissionsToRole(Merchant $merchant, Role $role, array $permissionIds)
     {
-        // Confirm the role belongs to this merchant
         if ($role->merchant_id !== $merchant->id) {
             return [
-                'status'  => false,
+                'status' => false,
                 'message' => 'Role not found for this merchant.',
             ];
         }
 
         if (empty($permissionIds)) {
             return [
-                'status'  => false,
+                'status' => false,
                 'message' => 'No permissions were selected.',
             ];
         }
 
-        // Fetch only those that belong to this merchant
-        $permissions = \Spatie\Permission\Models\Permission::where('merchant_id', $merchant->id)
-            ->whereIn('id', $permissionIds)
-            ->get();
+        $permissions = Permission::whereIn('id', $permissionIds)->get();
 
         if ($permissions->isEmpty()) {
             return [
-                'status'  => false,
-                'message' => 'None of the selected permissions belong to this merchant.',
+                'status' => false,
+                'message' => 'No valid permissions found.',
             ];
         }
 
-        // Attach them all in one go
         $role->givePermissionTo($permissions);
 
         return [
-            'status'  => true,
-            'message' => 'Permissions assigned to role [' . $role->name . '] successfully.',
+            'status' => true,
+            'message' => "Permissions assigned to role [{$role->name}] successfully.",
         ];
     }
 
+    /**
+     * Revoke a permission from a role.
+     */
     public function revokePermissionFromRole(Merchant $merchant, Role $role, Permission $permission)
     {
-        // 1. Confirm the role belongs to this merchant
         if ($role->merchant_id !== $merchant->id) {
             return [
-                'status'  => false,
+                'status' => false,
                 'message' => 'Role not found for this merchant.',
             ];
         }
 
-        // 2. Confirm the permission belongs to this merchant
-        if ($permission->merchant_id !== $merchant->id) {
-            return [
-                'status'  => false,
-                'message' => 'Permission not found for this merchant.',
-            ];
-        }
-
-        // 3. Use Spatie's built-in method to revoke permission from the role
         $role->revokePermissionTo($permission);
 
         return [
-            'status'  => true,
+            'status' => true,
             'message' => "Permission [{$permission->name}] has been removed from role [{$role->name}].",
         ];
     }
