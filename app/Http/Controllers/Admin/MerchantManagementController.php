@@ -125,4 +125,17 @@ class MerchantManagementController extends Controller
 
         return redirect()->route('admin.merchants.manage', $merchant->id)->with('success', 'Developer permissions unlocked.');
     }
+
+    public function destroyRole(Merchant $merchant, Role $role)
+    {
+        Gate::authorize('admin');
+
+        app(PermissionRegistrar::class)->setPermissionsTeamId($merchant->id);
+
+        $result = $this->merchantService->destroyRole($merchant, $role);
+
+        return redirect()
+            ->route('admin.merchants.manage', $merchant->id)
+            ->with($result['status'] ? 'success' : 'error', $result['message']);
+    }
 }

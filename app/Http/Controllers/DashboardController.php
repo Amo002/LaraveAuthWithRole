@@ -10,7 +10,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        Gate::authorize('viewAny', User::class);
 
         $authUser = auth()->user();
 

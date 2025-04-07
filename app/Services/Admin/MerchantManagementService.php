@@ -151,4 +151,34 @@ class MerchantManagementService
             'message' => "Permission [{$permission->name}] has been removed from role [{$role->name}].",
         ];
     }
+
+    public function destroyRole(Merchant $merchant, Role $role): array
+    {
+        if ($role->merchant_id !== $merchant->id) {
+            return [
+                'status' => false,
+                'message' => 'Role does not belong to this merchant.',
+            ];
+        }
+
+        // Allow super admin to delete merchant_admin
+        $user = auth()->user();
+        $isGlobalAdmin = $user->hasRole('admin') && $user->merchant_id === 1;
+
+        if (strtolower($role->name) === 'merchant_admin' && !$isGlobalAdmin) {
+            return [
+                'status' => false,
+                'message' => 'Cannot delete the merchant_admin role.',
+            ];
+        }
+
+        $role->permissions()->detach();
+        $role->users()->detach();
+        $role->delete();
+
+        return [
+            'status' => true,
+            'message' => "Role [{$role->name}] deleted successfully.",
+        ];
+    }
 }

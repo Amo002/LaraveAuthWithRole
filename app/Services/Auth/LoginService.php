@@ -30,20 +30,23 @@ class LoginService
 
     protected function redirectAfterLogin($user)
     {
-        // Global Admins → Dashboard
-        if ($user->hasRole(['merchant_admin', 'admin'])) {
+        if ($user->hasRole('admin')) {
             return redirect()->route('dashboard')
                 ->with('status', 'success')
                 ->with('message', 'Welcome back, Admin!');
         }
 
+        if ($user->hasRole('merchant_admin')) {
+            return redirect()->route('dashboard')
+                ->with('status', 'success')
+                ->with('message', 'Welcome back, Merchant Admin!');
+        }
 
-
-        // Default fallback → Home
         return redirect()->route('home')
             ->with('status', 'success')
             ->with('message', 'Welcome back!');
     }
+
 
 
 

@@ -31,6 +31,11 @@
                 <a class="nav-link {{ request()->routeIs('invites.index') ? 'active' : '' }}"
                     href="{{ route('invites.index') }}">Invites</a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.roles.index') ? 'active' : '' }}"
+                    href="{{ route('admin.roles.index') }}">Role & Permission</a>
+            </li>
         @endcan
 
         {{-- Merchant Section --}}

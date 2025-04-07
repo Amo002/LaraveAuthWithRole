@@ -32,7 +32,7 @@
         {{-- Roles List --}}
         <div class="card mb-4">
             <div class="card-header">Roles ({{ $roles->count() }})</div>
-            <div class="card-body p-0">
+            <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
                 @if ($roles->isEmpty())
                     <p class="p-3 text-muted mb-0">No roles found for this merchant.</p>
                 @else
@@ -41,13 +41,13 @@
                             <tr>
                                 <th>Role Name</th>
                                 @can('view-permissions')
-                                    <th>Permissions</th>
+                                    <th style="min-width: 200px;">Permissions</th>
                                 @endcan
                                 @can('edit-roles')
-                                    <th>Assign Permissions</th>
+                                    <th style="min-width: 250px;">Assign Permissions</th>
                                 @endcan
                                 @can('delete-roles')
-                                    <th>Delete</th>
+                                    <th style="min-width: 100px;">Delete</th>
                                 @endcan
                             </tr>
                         </thead>
@@ -66,15 +66,14 @@
                                             @if ($role->permissions->isEmpty())
                                                 <em>None</em>
                                             @else
-                                                <ul class="list-unstyled mb-0">
+                                                <ul class="list-unstyled mb-0" style="max-height: 150px; overflow-y: auto;">
                                                     @foreach ($role->permissions as $perm)
                                                         <li class="d-flex justify-content-between align-items-center py-1">
                                                             <span>{{ $perm->name }}</span>
                                                             @can('edit-roles')
-                                                                @unless($isMerchantAdminRole)
+                                                                @unless ($isMerchantAdminRole)
                                                                     <button type="button" class="btn btn-sm btn-outline-danger"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#confirmRevokeModal"
+                                                                        data-bs-toggle="modal" data-bs-target="#confirmRevokeModal"
                                                                         data-action="{{ route('merchant.roles.revokePermission', [$role->id, $perm->id]) }}"
                                                                         data-permission="{{ $perm->name }}">
                                                                         Remove
@@ -116,7 +115,8 @@
                                                             @endforeach
                                                         </div>
                                                     </div>
-                                                    <button type="submit" class="btn btn-sm btn-primary">Assign Selected</button>
+                                                    <button type="submit" class="btn btn-sm btn-primary">Assign
+                                                        Selected</button>
                                                 </form>
                                             @endif
                                         </td>
@@ -125,9 +125,8 @@
                                     {{-- Delete Role --}}
                                     @can('delete-roles')
                                         <td>
-                                            @unless($isMerchantAdminRole)
-                                                <button class="btn btn-sm btn-outline-danger"
-                                                    data-bs-toggle="modal"
+                                            @unless ($isMerchantAdminRole)
+                                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                                                     data-bs-target="#confirmDeleteRoleModal"
                                                     data-action="{{ route('merchant.roles.destroy', $role->id) }}"
                                                     data-role="{{ $role->name }}">
@@ -145,85 +144,87 @@
                 @endif
             </div>
         </div>
-    </div>
 
-    {{-- Revoke Permission Modal --}}
-    @can('edit-roles')
-        <div class="modal fade" id="confirmRevokeModal" tabindex="-1" aria-labelledby="confirmRevokeModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <form method="POST" id="revoke-form" class="modal-content">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-header">
-                        <h5 class="modal-title">Revoke Permission</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to revoke permission: <strong id="revoke-permission-name"></strong>?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Revoke</button>
-                    </div>
-                </form>
+
+        {{-- Revoke Permission Modal --}}
+        @can('edit-roles')
+            <div class="modal fade" id="confirmRevokeModal" tabindex="-1" aria-labelledby="confirmRevokeModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <form method="POST" id="revoke-form" class="modal-content">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-header">
+                            <h5 class="modal-title">Revoke Permission</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to revoke permission: <strong id="revoke-permission-name"></strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Revoke</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-    @endcan
+        @endcan
 
-    {{-- Delete Role Modal --}}
-    @can('delete-roles')
-        <div class="modal fade" id="confirmDeleteRoleModal" tabindex="-1" aria-labelledby="confirmDeleteRoleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <form method="POST" id="delete-role-form" class="modal-content">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-header">
-                        <h5 class="modal-title">Delete Role</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete role: <strong id="delete-role-name"></strong>?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </div>
-                </form>
+        {{-- Delete Role Modal --}}
+        @can('delete-roles')
+            <div class="modal fade" id="confirmDeleteRoleModal" tabindex="-1" aria-labelledby="confirmDeleteRoleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <form method="POST" id="delete-role-form" class="modal-content">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Role</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete role: <strong id="delete-role-name"></strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-    @endcan
-@endsection
+        @endcan
+    @endsection
 
-@push('scripts')
-    @can('edit-roles')
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const revokeModal = document.getElementById('confirmRevokeModal');
-                const revokeForm = document.getElementById('revoke-form');
-                const revokeName = document.getElementById('revoke-permission-name');
+    @push('scripts')
+        @can('edit-roles')
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const revokeModal = document.getElementById('confirmRevokeModal');
+                    const revokeForm = document.getElementById('revoke-form');
+                    const revokeName = document.getElementById('revoke-permission-name');
 
-                revokeModal.addEventListener('show.bs.modal', function (event) {
-                    const button = event.relatedTarget;
-                    revokeForm.action = button.getAttribute('data-action');
-                    revokeName.textContent = button.getAttribute('data-permission');
+                    revokeModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        revokeForm.action = button.getAttribute('data-action');
+                        revokeName.textContent = button.getAttribute('data-permission');
+                    });
                 });
-            });
-        </script>
-    @endcan
+            </script>
+        @endcan
 
-    @can('delete-roles')
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const deleteModal = document.getElementById('confirmDeleteRoleModal');
-                const deleteForm = document.getElementById('delete-role-form');
-                const roleName = document.getElementById('delete-role-name');
+        @can('delete-roles')
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const deleteModal = document.getElementById('confirmDeleteRoleModal');
+                    const deleteForm = document.getElementById('delete-role-form');
+                    const roleName = document.getElementById('delete-role-name');
 
-                deleteModal.addEventListener('show.bs.modal', function (event) {
-                    const button = event.relatedTarget;
-                    deleteForm.action = button.getAttribute('data-action');
-                    roleName.textContent = button.getAttribute('data-role');
+                    deleteModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        deleteForm.action = button.getAttribute('data-action');
+                        roleName.textContent = button.getAttribute('data-role');
+                    });
                 });
-            });
-        </script>
-    @endcan
-@endpush
+            </script>
+        @endcan
+    @endpush

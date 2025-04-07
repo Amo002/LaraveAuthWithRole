@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Main\HomeController;
 use App\Http\Controllers\Merchant\RoleController;
+use App\Http\Controllers\Admin\RoleController as AdminRoleController; 
 use App\Http\Controllers\Merchant\UserController as MerchantUserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -64,8 +65,8 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
     // ===========================
     //  Dashboard Routes
     // ===========================
-    // Admin Dashboard - Scoped to Super Admin Only
-    Route::middleware('role:admin')->group(function () {
+    // Admin Dashboard -
+    Route::middleware('role:admin,merchant_admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     });
 
@@ -93,19 +94,29 @@ Route::middleware(['auth', 'nocache', 'teams'])->group(function () {
         Route::post('merchants/{merchant}/roles/{role}/assign-permission', [MerchantManagementController::class, 'assignPermission'])->name('admin.merchants.roles.assignPermission');
         Route::delete('merchants/{merchant}/roles/{role}/permissions/{permission}', [MerchantManagementController::class, 'revokePermission'])->name('admin.merchants.roles.revokePermission');
         Route::post('/admin/merchants/{merchant}/permissions/unlock', [MerchantManagementController::class, 'unlockDevPermissions'])->name('admin.merchants.permissions.unlock');
+        Route::delete('merchants/{merchant}/roles/{role}', [MerchantManagementController::class, 'destroyRole'])->name('admin.merchants.roles.destroy');
+
 
         // Admin Invites
         Route::get('/invites', [InviteController::class, 'index'])->name('invites.index');
         Route::post('/invites', [InviteController::class, 'invite'])->name('invites.send');
         Route::delete('/invites/{id}', [InviteController::class, 'deleteInvite'])->name('invites.delete');
         Route::post('/invites/{id}/resend', [InviteController::class, 'resendInvite'])->name('invites.resend');
-    });
+
+
+        // Merchant Roles
+        Route::get('/roles', [AdminRoleController::class, 'index'])->name('admin.roles.index');
+        Route::post('/roles', [AdminRoleController::class, 'store'])->name('admin.roles.store');
+        Route::post('/roles/{role}/assign-permissions', [AdminRoleController::class, 'assignPermission'])->name('admin.roles.assignPermission');
+        Route::delete('/roles/{role}/permissions/{permission}', [AdminRoleController::class, 'revokePermission'])->name('admin.roles.revokePermission');
+        Route::delete('/roles/{role}', [AdminRoleController::class, 'destroy'])->name('admin.roles.destroy');
+        });
 
     // ===========================
     //  Merchant Routes (Scoped to Merchant ID)
     // ===========================
 
-    Route::middleware(['auth', 'merchant.active'])->prefix('merchant')->group(function () {
+    Route::middleware('merchant.active')->prefix('merchant')->group(function () {
         // Merchant Users
         Route::get('/users', [MerchantUserController::class, 'index'])->name('merchant.users.index')->middleware('can:view-merchant-users');
         Route::post('/users', [MerchantUserController::class, 'store'])->name('merchant.users.store')->middleware('can:create-merchant-users');

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
@@ -12,27 +12,33 @@ class DashboardController extends Controller
     {
         $authUser = auth()->user();
 
-        // Data for Admin
+        // Global Admin
         if ($authUser->hasRole('admin')) {
+            Gate::authorize('viewAny', User::class);
+
             $data = [
+                'authUser' => $authUser,
                 'totalUsers' => User::count(),
                 'activeSessions' => DB::table('sessions')->count(),
                 'pendingRequests' => User::whereNull('email_verified_at')->count(),
             ];
-        }
-        // Data for Merchant
-        elseif ($authUser->hasRole('merchant')) {
-            $data = [
-                'totalMerchantUsers' => User::where('merchant_id', $authUser->id)->count(),
-                'successfulOrders' => rand(5, 20), // Example value, replace with actual logic
-                'failedOrders' => rand(1, 5), // Example value, replace with actual logic
-            ];
-        } else {
-            $data = [];
+
+            return view('admin.dashboard', $data);
         }
 
-        return view('admin.dashboard', array_merge($data, [
-            'authUser' => $authUser
-        ]));
+        // Merchant Admin
+        if ($authUser->hasRole('merchant_admin')) {
+            $data = [
+                'authUser' => $authUser,
+                'totalMerchantUsers' => User::where('merchant_id', $authUser->merchant_id)->count(),
+                'successfulOrders' => rand(5, 20), // Replace with real logic
+                'failedOrders' => rand(1, 5),       // Replace with real logic
+            ];
+
+            return view('shared.dashboard', $data);
+        }
+
+        // Fallback (if needed)
+        abort(403, 'Unauthorized');
     }
 }
