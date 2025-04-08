@@ -3,50 +3,77 @@
 @section('title', 'Users')
 
 @section('content')
-    <h2>Users List</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-people me-2"></i>
+            Users List
+        </h2>
+        <div class="d-flex align-items-center">
+            <label for="merchant-filter" class="me-2 mb-0">Filter by Merchant:</label>
+            <select class="form-select form-select-sm" id="merchant-filter" style="width: 200px;">
+                @foreach ($merchants as $id => $name)
+                    <option value="{{ $id }}">{{ $name }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
 
     {{-- Users Table --}}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th> 
-                <th>Roles</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($users as $user)
-                <tr>
-                    <td>{{ $user['id'] }}</td>
-                    <td>{{ $user['name'] }}</td>
-                    <td>{{ $user['email'] }}</td> 
-                    <td>{{ implode(', ', $user['roles']) }}</td>
-                    <td>
-                        @if (auth()->id() !== $user['id'] && $user['id'] !== 1)
-                            <button type="button" class="btn btn-sm btn-danger delete-user-btn"
-                                data-user-id="{{ $user['id'] }}" data-bs-toggle="modal"
-                                data-bs-target="#confirmDeleteUserModal">
-                                Delete
-                            </button>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Merchant</th>
+                            <th>Roles</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($users as $user)
+                            <tr data-merchant-id="{{ $user['merchant_id'] }}">
+                                <td>{{ $user['id'] }}</td>
+                                <td>{{ $user['name'] }}</td>
+                                <td>{{ $user['email'] }}</td>
+                                <td>{{ $merchants[$user['merchant_id']] ?? 'Unknown' }}</td>
+                                <td>
+                                    @foreach ($user['roles'] as $role)
+                                        <span class="badge bg-primary me-1">{{ $role }}</span>
+                                    @endforeach
+                                </td>
+                                <td class="text-end">
+                                    @if (auth()->id() !== $user['id'] && $user['id'] !== 1)
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-user-btn"
+                                                data-user-id="{{ $user['id'] }}" data-bs-toggle="modal"
+                                                data-bs-target="#confirmDeleteUserModal">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
 
-                            <button type="button" class="btn btn-sm btn-warning update-role-btn"
-                                data-user-id="{{ $user['id'] }}" data-current-role="{{ $user['roles'][0] ?? '' }}"
-                                data-merchant-id="{{ $user['merchant_id'] }}" data-bs-toggle="modal"
-                                data-bs-target="#updateRoleModal">
-                                Update Role
-                            </button>
-                        @else
-                            <span class="badge bg-secondary">You</span>
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-
+                                            <button type="button" class="btn btn-sm btn-outline-warning update-role-btn"
+                                                data-user-id="{{ $user['id'] }}" 
+                                                data-current-role="{{ $user['roles'][0] ?? '' }}"
+                                                data-merchant-id="{{ $user['merchant_id'] }}" 
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#updateRoleModal">
+                                                <i class="bi bi-shield-lock"></i>
+                                            </button>
+                                        </div>
+                                    @else
+                                        <span class="badge bg-secondary">You</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     {{-- Delete Confirmation Modal --}}
     <div class="modal fade" id="confirmDeleteUserModal" tabindex="-1" aria-labelledby="confirmDeleteUserLabel"
@@ -57,15 +84,24 @@
                     @csrf
                     @method('DELETE')
                     <div class="modal-header">
-                        <h5 class="modal-title">Confirm User Deletion</h5>
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                            Confirm User Deletion
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        Are you sure you want to delete this user?
+                        <p class="mb-0">Are you sure you want to delete this user? This action cannot be undone.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>
+                            Delete
+                        </button>
                     </div>
                 </form>
             </div>
@@ -80,15 +116,27 @@
                 @method('PATCH')
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Update User Role</h5>
+                        <h5 class="modal-title">
+                            <i class="bi bi-shield-lock me-2"></i>
+                            Update User Role
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <select class="form-select" name="role" id="user-role"></select>
+                        <div class="mb-3">
+                            <label for="user-role" class="form-label">Select Role</label>
+                            <select class="form-select" name="role" id="user-role"></select>
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning">Update Role</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Update Role
+                        </button>
                     </div>
                 </div>
             </form>
@@ -103,10 +151,24 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            let deleteUserId = null;
-            let updateUserId = null;
+            // Merchant filter functionality
+            const merchantFilter = document.getElementById('merchant-filter');
+            const userRows = document.querySelectorAll('tbody tr');
 
-            // Delete user
+            merchantFilter.addEventListener('change', () => {
+                const selectedMerchantId = merchantFilter.value;
+                
+                userRows.forEach(row => {
+                    if (selectedMerchantId === 'all' || row.getAttribute('data-merchant-id') === selectedMerchantId) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            // Delete user functionality
+            let deleteUserId = null;
             document.querySelectorAll('.delete-user-btn').forEach(button => {
                 button.addEventListener('click', () => {
                     deleteUserId = button.getAttribute('data-user-id');
@@ -119,7 +181,8 @@
                 deleteUserId = null;
             });
 
-            // Update role
+            // Update role functionality
+            let updateUserId = null;
             document.querySelectorAll('.update-role-btn').forEach(button => {
                 button.addEventListener('click', () => {
                     updateUserId = button.getAttribute('data-user-id');
@@ -144,8 +207,7 @@
                         roles.forEach(role => {
                             const option = document.createElement('option');
                             option.value = role;
-                            option.textContent = role.charAt(0).toUpperCase() + role.slice(
-                                1);
+                            option.textContent = role.charAt(0).toUpperCase() + role.slice(1);
                             if (role === currentRole) option.selected = true;
                             roleSelect.appendChild(option);
                         });

@@ -3,18 +3,70 @@
 @section('title', 'Merchant Management')
 
 @section('content')
-    <div class="container mt-4">
-        <h1 class="mb-3">Manage Merchant: {{ $merchant->name }}</h1>
-        <p><strong>Address:</strong> {{ $merchant->address }}</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="bi bi-gear me-2"></i>
+                Manage Merchant
+            </h2>
+            <p class="text-muted mb-0">{{ $merchant->name }}</p>
+        </div>
+        <a href="{{ route('admin.merchants.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>
+            Back to Merchants
+        </a>
+    </div>
 
-        <!-- Roles Card -->
-        <div class="card mb-4">
-            <div class="card-header">Roles ({{ $roles->count() }})</div>
-            <div class="card-body p-0">
-                @if ($roles->isEmpty())
-                    <p class="p-3 text-muted mb-0">No roles found for this merchant.</p>
-                @else
-                    <table class="table mb-0">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Merchant Information
+                    </h5>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Name</dt>
+                        <dd class="col-sm-9">{{ $merchant->name }}</dd>
+                        <dt class="col-sm-3">Address</dt>
+                        <dd class="col-sm-9">{{ $merchant->address }}</dd>
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">
+                            @if ($merchant->is_active)
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Active
+                                </span>
+                            @else
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Disabled
+                                </span>
+                            @endif
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-shield-lock me-2"></i>
+                Roles ({{ $roles->count() }})
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if ($roles->isEmpty())
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-shield-x mb-3" style="font-size: 2rem;"></i>
+                    <p class="mb-0">No roles found for this merchant.</p>
+                </div>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 25%">Role Name</th>
@@ -32,25 +84,30 @@
                                     $unassigned = $permissions->diff($role->permissions);
                                 @endphp
                                 <tr>
-                                    <td class="align-middle">{{ $role->name }}</td>
+                                    <td class="align-middle">
+                                        <span class="fw-bold">{{ $role->name }}</span>
+                                        @if ($isMerchantAdmin)
+                                            <span class="badge bg-primary ms-2">Admin</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if ($role->permissions->isEmpty())
-                                            <em>None</em>
+                                            <span class="text-muted">None</span>
                                         @else
-                                            <ul class="list-unstyled mb-0">
+                                            <div class="d-flex flex-wrap gap-2">
                                                 @foreach ($role->permissions as $perm)
-                                                    <li class="d-flex justify-content-between align-items-center py-1">
-                                                        <span>{{ $perm->name }}</span>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    <div class="badge bg-light text-dark border">
+                                                        {{ $perm->name }}
+                                                        <button type="button" class="btn btn-link btn-sm text-danger p-0 ms-1"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#confirmRevokeModal"
                                                             data-action="{{ route('admin.merchants.roles.revokePermission', [$merchant->id, $role->id, $perm->id]) }}"
                                                             data-permission="{{ $perm->name }}">
-                                                            Remove
+                                                            <i class="bi bi-x"></i>
                                                         </button>
-                                                    </li>
+                                                    </div>
                                                 @endforeach
-                                            </ul>
+                                            </div>
                                         @endif
                                     </td>
                                     <td>
@@ -61,7 +118,7 @@
                                                 action="{{ route('admin.merchants.roles.assignPermission', [$merchant->id, $role->id]) }}">
                                                 @csrf
                                                 <div class="mb-2">
-                                                    <label class="form-label fw-bold fs-6">Select Permissions:</label>
+                                                    <label class="form-label fw-bold">Select Permissions:</label>
                                                     <div class="border rounded p-2" style="max-height: 160px; overflow-y: auto;">
                                                         @foreach ($unassigned as $p)
                                                             <div class="form-check">
@@ -77,19 +134,20 @@
                                                     </div>
                                                 </div>
                                                 <button type="submit" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-plus-circle me-1"></i>
                                                     Assign Selected
                                                 </button>
                                             </form>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         @if ($canDelete)
                                             <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                                                 data-bs-target="#confirmDeleteRoleModal"
                                                 data-action="{{ route('admin.merchants.roles.destroy', [$merchant->id, $role->id]) }}"
                                                 data-role="{{ $role->name }}"
                                                 data-users="{{ $role->users->count() }}">
-                                                Delete
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         @else
                                             <span class="text-muted">Protected</span>
@@ -99,11 +157,9 @@
                             @endforeach
                         </tbody>
                     </table>
-                @endif
-            </div>
+                </div>
+            @endif
         </div>
-
-        <a href="{{ route('admin.merchants.index') }}" class="btn btn-secondary mt-3">Back to Merchants</a>
     </div>
 
     <!-- Revoke Modal -->
@@ -113,15 +169,24 @@
                 @csrf
                 @method('DELETE')
                 <div class="modal-header">
-                    <h5 class="modal-title">Revoke Permission</h5>
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                        Revoke Permission
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    Are you sure you want to revoke permission: <strong id="revoke-permission-name"></strong>?
+                    <p class="mb-0">Are you sure you want to revoke permission: <strong id="revoke-permission-name"></strong>?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Revoke</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Revoke
+                    </button>
                 </div>
             </form>
         </div>
@@ -134,16 +199,27 @@
                 @csrf
                 @method('DELETE')
                 <div class="modal-header">
-                    <h5 class="modal-title">Delete Role</h5>
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        Delete Role
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    This role is assigned to <strong id="delete-role-users"></strong> user(s).<br>
-                    Are you sure you want to delete role: <strong id="delete-role-name"></strong>?
+                    <p class="mb-0">
+                        This role is assigned to <strong id="delete-role-users"></strong> user(s).<br>
+                        Are you sure you want to delete role: <strong id="delete-role-name"></strong>?
+                    </p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>
+                        Delete
+                    </button>
                 </div>
             </form>
         </div>

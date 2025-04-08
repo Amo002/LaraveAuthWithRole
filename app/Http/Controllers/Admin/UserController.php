@@ -25,6 +25,7 @@ class UserController extends Controller
         return view('admin.users', [
             'users' => $result['data'],
             'availableRoles' => $result['roles'],
+            'merchants' => $result['merchants']
         ]);
     }
 

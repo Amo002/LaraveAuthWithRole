@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\User;
+use App\Models\Merchant;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -15,6 +16,14 @@ class UserService
     {
         $allUsers = collect();
         $availableRoles = collect();
+        $merchants = collect();
+
+        // Get all merchants
+        $merchantList = Merchant::select('id', 'name')->get();
+        $merchants['all'] = 'All Users';
+        foreach ($merchantList as $merchant) {
+            $merchants[$merchant->id] = $merchant->name;
+        }
 
         // Get all unique merchant_ids from users
         $merchantIds = User::select('merchant_id')->distinct()->pluck('merchant_id');
@@ -48,6 +57,7 @@ class UserService
             'success' => true,
             'data' => $allUsers,
             'roles' => $availableRoles,
+            'merchants' => $merchants,
             'message' => 'Users retrieved successfully.'
         ];
     }
