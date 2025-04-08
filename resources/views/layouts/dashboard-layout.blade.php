@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +9,7 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
 
     <style>
         body {
@@ -42,6 +43,7 @@
         }
     </style>
 </head>
+
 <body>
 
     {{-- Include Sidebar --}}
@@ -57,10 +59,23 @@
             <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <h6 class="mb-2">Please fix the following:</h6>
+                <ul class="mb-0 small">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+
         @yield('content')
     </div>
 
     {{-- Inject Pushed Scripts --}}
     @stack('scripts')
 </body>
+
 </html>

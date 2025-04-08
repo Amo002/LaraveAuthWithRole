@@ -19,16 +19,16 @@ class UserPolicy
     /**
      * View a specific user.
      */
-    public function view(User $user, User $targetUser)
+    public function view(User $user, User $targetUser): bool
     {
-        return $user->merchant_id === $targetUser->merchant_id
-            && ($user->can('view-users') || $user->can('view-merchant-users'));
+        return $user->merchant_id === $targetUser->merchant_id &&
+            ($user->can('view-users') || $user->can('view-merchant-users'));
     }
 
     /**
-     * View any users (used in index view).
+     * View list of users.
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user): bool
     {
         return $user->can('view-users') || $user->can('view-merchant-users');
     }
@@ -36,26 +36,25 @@ class UserPolicy
     /**
      * Create a new user.
      */
-    public function create(User $user)
+    public function create(User $user): bool
     {
         return $user->can('create-users') || $user->can('create-merchant-users');
     }
 
     /**
-     * Update a user.
+     * Update a user's profile (e.g., name/email).
      */
-    public function update(User $user, User $targetUser)
+    public function update(User $user, User $targetUser): bool
     {
-        if ($targetUser->id === 1) return false;
-
         return $user->merchant_id === $targetUser->merchant_id &&
-               ($user->can('edit-users') || $user->can('edit-merchant-users'));
+            ($user->can('edit-users') || $user->can('edit-merchant-users')) &&
+            $targetUser->id !== 1;
     }
 
     /**
      * Delete a user.
      */
-    public function delete(User $authUser, User $targetUser)
+    public function delete(User $authUser, User $targetUser): bool
     {
         if ($authUser->id === $targetUser->id || $targetUser->id === 1) {
             return false;
@@ -72,11 +71,19 @@ class UserPolicy
         $authRole = $authUser->getRoleNames()->first();
         $targetRole = $targetUser->getRoleNames()->first();
 
-        // Disallow deleting same or higher role
-        if ($authRole === $targetRole) {
+        // Prevent deleting users with equal or higher roles
+        if ($authRole === $targetRole || $targetRole === 'merchant_admin') {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Assign a role to another user.
+     */
+    public function assignRole(User $authUser): bool
+    {
+        return $authUser->can('assign-merchant-roles');
     }
 }

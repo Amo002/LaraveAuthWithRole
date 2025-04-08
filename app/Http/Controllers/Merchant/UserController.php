@@ -3,37 +3,46 @@
 namespace App\Http\Controllers\Merchant;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\Merchant\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use App\Models\User;
 
 class UserController extends Controller
 {
-    protected $userService;
+    protected UserService $userService;
 
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
     }
 
+    /**
+     * Show list of merchant users
+     */
     public function index()
     {
-        // here check if the user has the permission to view any users 
-        // in the policy 
+        
         Gate::authorize('viewAny', User::class);
 
         $users = $this->userService->getUsersForMerchant(auth()->user());
+        $roles = $this->userService->getAssignableRolesForMerchant(auth()->user());
 
-        return view('merchant.users', compact('users'));
+        return view('merchant.users', compact('users', 'roles'));
     }
+
+    /**
+     * Create a user (for testing purposes)
+     */
 
     public function store(Request $request)
     {
-        // here check if the user has the permission to create a user
-        // in the policy 
-
-        Gate::authorize('create', User::class);
+        // Policy check is handled by middleware
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string',
+        ]);
 
         $result = $this->userService->createUserForMerchant($request, auth()->user());
 
@@ -43,11 +52,32 @@ class UserController extends Controller
         );
     }
 
+    /**
+     * Update the role for a user (via modal)
+     */
+    public function updateRole(Request $request, $id)
+    {
+        Gate::authorize('assignRole', User::class);
+
+        $request->validate([
+            'role' => 'required|string',
+        ]);
+
+        $result = $this->userService->updateUserRole($id, $request->role, auth()->user());
+
+        return redirect()->route('merchant.users.index')->with(
+            $result['status'] ? 'success' : 'error',
+            $result['message']
+        );
+    }
+
+    /**
+     * Delete a merchant user
+     */
     public function destroy($id)
     {
-        // here check if the user has the permission to delete a user
-        // in the policy
         $targetUser = User::findOrFail($id);
+
         Gate::authorize('delete', $targetUser);
 
         $result = $this->userService->deleteUser($id, auth()->user());

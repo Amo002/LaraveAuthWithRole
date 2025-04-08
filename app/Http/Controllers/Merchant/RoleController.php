@@ -3,117 +3,74 @@
 namespace App\Http\Controllers\Merchant;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Merchant\AssignPermissionRequest;
+use App\Http\Requests\Merchant\StoreRoleRequest;
+use App\Services\Merchant\RoleService;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Gate;
+
 
 class RoleController extends Controller
 {
+    protected $service;
+
+    public function __construct(RoleService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index()
     {
         $merchant = auth()->user()->merchant;
 
-
-        app(PermissionRegistrar::class)->setPermissionsTeamId($merchant->id);
-
-        $roles = Role::where('merchant_id', $merchant->id)->with('permissions')->get();
-
-        $adminRole = Role::where('name', 'merchant_admin')
-            ->where('merchant_id', $merchant->id)
-            ->with('permissions')
-            ->first();
-
-        $availablePermissions = $adminRole?->permissions ?? collect();
-
         return view('merchant.roles', [
             'merchant' => $merchant,
-            'roles' => $roles,
-            'availablePermissions' => $availablePermissions
+            'roles' => $this->service->getRoles(),
+            'availablePermissions' => $this->service->getAdminPermissions(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreRoleRequest $request)
     {
-        $merchant = auth()->user()->merchant;
+        $created = $this->service->createRole($request->role_name);
 
-
-        app(PermissionRegistrar::class)->setPermissionsTeamId($merchant->id);
-
-        $validated = $request->validate([
-            'role_name' => 'required|string|max:50',
-        ]);
-
-        $fullRoleName = strtolower($merchant->name) . '_' . Str::slug($validated['role_name'], '_');
-
-        if (Role::where('name', $fullRoleName)->where('merchant_id', $merchant->id)->exists()) {
+        if (!$created) {
             return redirect()->back()->with('error', 'Role already exists.');
         }
-
-        Role::create([
-            'name' => $fullRoleName,
-            'merchant_id' => $merchant->id,
-        ]);
 
         return redirect()->route('merchant.roles.index')->with('success', 'Role created successfully.');
     }
 
-    public function assignPermission(Request $request, Role $role)
+    public function assignPermission(AssignPermissionRequest $request, Role $role)
     {
-        $merchant = auth()->user()->merchant;
+        $assigned = $this->service->assignPermissions($role, $request->permission_ids);
 
-
-        app(PermissionRegistrar::class)->setPermissionsTeamId($merchant->id);
-
-        if ($role->merchant_id !== $merchant->id) {
+        if (!$assigned) {
             return redirect()->back()->with('error', 'Unauthorized role access.');
         }
-
-        $permissionIds = $request->input('permission_ids', []);
-
-        if (empty($permissionIds)) {
-            return redirect()->back()->with('error', 'No permissions selected.');
-        }
-
-        $permissions = Permission::whereIn('id', $permissionIds)->get();
-        $role->givePermissionTo($permissions);
 
         return redirect()->route('merchant.roles.index')->with('success', 'Permissions assigned successfully.');
     }
 
+
     public function revokePermission(Role $role, Permission $permission)
     {
-        $merchant = auth()->user()->merchant;
+        $revoked = $this->service->revokePermission($role, $permission);
 
-
-        app(PermissionRegistrar::class)->setPermissionsTeamId($merchant->id);
-
-        if ($role->merchant_id !== $merchant->id || !$role->permissions->contains($permission)) {
+        if (!$revoked) {
             return redirect()->back()->with('error', 'Unauthorized or invalid permission.');
         }
-
-        $role->revokePermissionTo($permission);
 
         return redirect()->route('merchant.roles.index')->with('success', 'Permission revoked successfully.');
     }
 
     public function destroy(Role $role)
     {
-        $merchant = auth()->user()->merchant;
+        $deleted = $this->service->deleteRole($role);
 
-        if ($role->merchant_id !== $merchant->id) {
-            return redirect()->back()->with('error', 'Unauthorized role access.');
+        if (!$deleted) {
+            return redirect()->back()->with('error', 'Cannot delete this role.');
         }
-
-        if (strtolower($role->name) === 'merchant_admin') {
-            return redirect()->back()->with('error', 'Cannot delete the merchant_admin role.');
-        }
-
-        $role->permissions()->detach();
-        $role->users()->detach();
-        $role->delete();
 
         return redirect()->route('merchant.roles.index')->with('success', 'Role deleted successfully.');
     }

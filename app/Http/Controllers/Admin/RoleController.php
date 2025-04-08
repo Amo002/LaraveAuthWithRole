@@ -3,64 +3,47 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Merchant;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\AssignPermissionRequest;
+use App\Http\Requests\Admin\StoreRoleRequest;
+use App\Services\Admin\RoleService;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Support\Facades\Gate;
 
 class RoleController extends Controller
 {
+    protected $service;
+
+    public function __construct(RoleService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index()
     {
         Gate::authorize('admin');
 
-        $roles = Role::with(['permissions', 'users'])->withCount('users')->get(); // Add withCount
-        $permissions = Permission::all();
-        $merchants = Merchant::pluck('name', 'id'); // id => name
+        $roles = $this->service->listRoles();
+        $permissions = $this->service->listPermissions();
+        $merchants = $this->service->listMerchants();
 
         return view('admin.roles', compact('roles', 'permissions', 'merchants'));
     }
 
-
-    public function store(Request $request)
+    public function store(StoreRoleRequest $request)
     {
         Gate::authorize('admin');
 
-        $request->validate([
-            'role_name' => 'required|string|max:255|unique:roles,name',
-            'merchant_id' => 'required|exists:merchants,id',
-        ]);
-
-        $merchant = Merchant::findOrFail($request->merchant_id);
-        $isGlobal = $merchant->id == 1;
-
-        $finalName = $isGlobal
-            ? $request->role_name
-            : strtolower(str_replace(' ', '_', $merchant->name)) . '_' . $request->role_name;
-
-        Role::create([
-            'name' => $finalName,
-            'merchant_id' => $merchant->id,
-        ]);
+        $this->service->createRole($request->only('role_name', 'merchant_id'));
 
         return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
     }
 
-
-    public function assignPermission(Request $request, Role $role)
+    public function assignPermission(AssignPermissionRequest $request, Role $role)
     {
         Gate::authorize('admin');
 
-        $request->validate([
-            'permission_ids' => 'required|array',
-            'permission_ids.*' => 'exists:permissions,id',
-        ]);
-
-        $permissions = Permission::whereIn('id', $request->permission_ids)->get();
-
-        $role->givePermissionTo($permissions);
+        $this->service->assignPermissions($role, $request->permission_ids);
 
         return redirect()->route('admin.roles.index')->with('success', 'Permissions assigned successfully.');
     }
@@ -69,11 +52,11 @@ class RoleController extends Controller
     {
         Gate::authorize('admin');
 
-        if (!$role->permissions->contains($permission)) {
+        $success = $this->service->revokePermission($role, $permission);
+
+        if (!$success) {
             return redirect()->back()->with('error', 'Permission not assigned to this role.');
         }
-
-        $role->revokePermissionTo($permission);
 
         return redirect()->route('admin.roles.index')->with('success', 'Permission revoked successfully.');
     }
@@ -82,14 +65,11 @@ class RoleController extends Controller
     {
         Gate::authorize('admin');
 
-        // Prevent deleting global 'admin' role
-        if ($role->name === 'admin' && $role->merchant_id === 1) {
+        $success = $this->service->deleteRole($role);
+
+        if (!$success) {
             return redirect()->back()->with('error', 'Cannot delete the global admin role.');
         }
-
-        $role->permissions()->detach();
-        $role->users()->detach();
-        $role->delete();
 
         return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully.');
     }

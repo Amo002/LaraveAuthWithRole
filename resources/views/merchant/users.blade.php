@@ -3,26 +3,26 @@
 @section('title', 'Merchant Users')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Merchant Users</h2>
-        @can('create-merchant-users')
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">Add User</button>
-        @endcan
-    </div>
+    <h2>Merchant Users</h2>
 
-    <table class="table table-bordered align-middle">
-        <thead class="table-light">
+    @can('create-merchant-users')
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            Add User
+        </button>
+    @endcan
+
+    <table class="table table-striped">
+        <thead>
             <tr>
                 <th>ID</th>
                 <th>Name</th>
                 <th>Email</th>
-                @canany(['edit-merchant-users', 'delete-merchant-users'])
-                    <th>Actions</th>
-                @endcanany
+                <th>Roles</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($users as $user)
+            @foreach ($users as $user)
                 <tr>
                     <td>{{ $user->id }}</td>
                     <td>
@@ -32,27 +32,31 @@
                         @endif
                     </td>
                     <td>{{ $user->email }}</td>
-                    @canany(['edit-merchant-users', 'delete-merchant-users'])
-                        <td>
-                            <div class="d-flex gap-2">
-                                @can('delete-merchant-users')
-                                    @if (auth()->id() !== $user->id)
-                                        <button type="button" class="btn btn-sm btn-danger delete-user-btn"
-                                            data-user-id="{{ $user->id }}" data-bs-toggle="modal"
-                                            data-bs-target="#confirmDeleteUserModal">
-                                            Delete
-                                        </button>
-                                    @endif
-                                @endcan
-                            </div>
-                        </td>
-                    @endcanany
+                    <td>{{ implode(', ', $user->getRoleNames()->toArray()) }}</td>
+                    <td>
+                        @if (auth()->id() !== $user->id)
+                            @can('delete-merchant-users')
+                                <button type="button" class="btn btn-sm btn-danger delete-user-btn"
+                                    data-user-id="{{ $user->id }}" data-bs-toggle="modal"
+                                    data-bs-target="#confirmDeleteUserModal">
+                                    Delete
+                                </button>
+                            @endcan
+
+                            @can('assign-merchant-roles')
+                                <button type="button" class="btn btn-sm btn-warning update-role-btn"
+                                    data-user-id="{{ $user->id }}"
+                                    data-current-role="{{ $user->roles->first()?->name ?? '' }}" data-bs-toggle="modal"
+                                    data-bs-target="#updateRoleModal">
+                                    Update Role
+                                </button>
+                            @endcan
+                        @else
+                            <span class="badge bg-secondary">—</span>
+                        @endif
+                    </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="4" class="text-muted text-center">No users found.</td>
-                </tr>
-            @endforelse
+            @endforeach
         </tbody>
     </table>
 
@@ -69,15 +73,15 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" required>
+                            <input type="text" name="name" class="form-control" required />
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
+                            <input type="email" name="email" class="form-control" required />
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" required>
+                            <input type="password" name="password" class="form-control" required />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -112,18 +116,64 @@
             </div>
         </div>
     @endcan
+
+    {{-- Update Role Modal --}}
+    @can('assign-merchant-roles')
+        <div class="modal fade" id="updateRoleModal" tabindex="-1" aria-labelledby="updateRoleLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="update-role-form" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Update User Role</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select name="role" class="form-select" required>
+                                <option value="">Select Role</option>
+                                @foreach ($roles as $role)
+                                    <option value="{{ $role->name }}">{{ ucfirst(str_replace('_', ' ', $role->name)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Update Role</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endcan
 @endsection
 
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const deleteButtons = document.querySelectorAll('.delete-user-btn');
-            const deleteForm = document.getElementById('delete-user-form');
-
-            deleteButtons.forEach(button => {
+            // Delete action
+            document.querySelectorAll('.delete-user-btn').forEach(button => {
                 button.addEventListener('click', () => {
                     const userId = button.getAttribute('data-user-id');
-                    deleteForm.action = `/merchant/users/${userId}`;
+                    document.getElementById('delete-user-form').action =
+                        `/merchant/users/${userId}`;
+                });
+            });
+
+            // Update role modal
+            document.querySelectorAll('.update-role-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const userId = button.getAttribute('data-user-id');
+                    const currentRole = button.getAttribute('data-current-role');
+                    const form = document.getElementById('update-role-form');
+                    const select = form.querySelector('select[name="role"]');
+
+                    form.action = `/merchant/users/${userId}/update-role`;
+
+                    Array.from(select.options).forEach(option => {
+                        option.selected = option.value === currentRole;
+                    });
                 });
             });
         });

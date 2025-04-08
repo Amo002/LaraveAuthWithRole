@@ -20,6 +20,8 @@ class RolePermissionSeeder extends Seeder
             'edit-permissions',
             'delete-permissions',
             'view-permissions',
+            'assign-merchant-roles',
+            'assign-merchant-permissions',
             'create-users',
             'edit-users',
             'delete-users',
